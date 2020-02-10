@@ -58,13 +58,12 @@ void search(Map map, Planner planner) {
 
     int y;
     int x;
-    int new_x, new_y, new_cost = 0;
+    int new_x, new_y;
     int cost = 0;
-    deque<vector<int>> frontier_queue;
     int count = 0;
+    deque<vector<int>> frontier_queue;
 
     frontier_queue.push_back({planner.start[0], planner.start[1], cost});
-//    for (int j = 0; j < 100; j++) {
     for (;;) {
         // print
         print2DVector(map.grid);  //debug
@@ -82,6 +81,8 @@ void search(Map map, Planner planner) {
         }
         // move: get the first element from the list, as a new start
         vector<int> new_start = frontier_queue.front();
+        frontier_queue.pop_front();
+
         y = new_start[0];
         x = new_start[1];
         cost = new_start[2];
@@ -92,7 +93,7 @@ void search(Map map, Planner planner) {
 
         // Goal??
         if (x == planner.goal[1] && y == planner.goal[0]) {
-//            cout << "Arrive the goal!" << endl;
+            cout << "Arrive the goal!" << endl;
             planner.cost = cost;
             break;
         }
@@ -120,8 +121,6 @@ void search(Map map, Planner planner) {
         map.grid[y][x] = cost + 2;
 
         // next
-        frontier_queue.pop_front();
-//        new_cost = cost + 1;
         count++;
 
     }
