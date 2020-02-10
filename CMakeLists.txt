@@ -3,4 +3,6 @@ project(udacity_pathplanning)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(udacity_pathplanning BFS_Expansion_List.cpp)
+add_executable(udacity_pathplanning
+#        BFS_Expansion_List.cpp)
+        BFS_Expansion_Vector.cpp)
