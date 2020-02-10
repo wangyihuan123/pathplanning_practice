@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <typeinfo>
 #include <deque>
+#include <iomanip>
 
 using namespace std;
 
@@ -43,7 +44,7 @@ template<typename T>
 void print2DVector(T Vec) {
     for (int i = 0; i < Vec.size(); ++i) {
         for (int j = 0; j < Vec[0].size(); ++j) {
-            cout << Vec[i][j] << ' ';
+            cout << setw(2) << Vec[i][j] << ' ';
         }
         cout << endl;
     }
@@ -55,15 +56,48 @@ void print2DVector(T Vec) {
 // You are only required to print the final triplet values
 void search(Map map, Planner planner) {
 
-    int y = planner.start[0];
-    int x = planner.start[1];
+    int y;
+    int x;
+    int new_x, new_y, new_cost = 0;
+    int cost = 0;
     deque<vector<int>> frontier_queue;
-    int new_x, new_y, new_cost = 1;
     int count = 0;
 
-    for (int j = 0; j < 100; j++) {
+    frontier_queue.push_back({planner.start[0], planner.start[1], cost});
+//    for (int j = 0; j < 100; j++) {
+    for (;;) {
+        // print
+        print2DVector(map.grid);  //debug
+        cout << "Expansion #:" << count << endl;
+        cout << "OpenList: ";
+        for (auto &cell : frontier_queue) {
+            cout << "[" << cell[2] << " " << cell[0] << " " << cell[1] << "]";
+        }
+        cout << endl;
 
-        // loop "^ < v >"
+        // move
+        if (frontier_queue.size() == 0) {
+            cout << "loop all the grid, but haven't found the goal??" << endl;
+            return;
+        }
+        // move: get the first element from the list, as a new start
+        vector<int> new_start = frontier_queue.front();
+        y = new_start[0];
+        x = new_start[1];
+        cost = new_start[2];
+
+        cout << "Cell Picked: ";
+        cout << "[" << cost << " " << y << " " << x << " " << "]" << endl;
+        cout << endl;
+
+        // Goal??
+        if (x == planner.goal[1] && y == planner.goal[0]) {
+//            cout << "Arrive the goal!" << endl;
+            planner.cost = cost;
+            break;
+        }
+
+        // loop "^ < v >" to add the frontier to the queue
         for (int i = 0; i < planner.movements.size(); i++) {
             new_y = y + planner.movements[i][0];
             new_x = x + planner.movements[i][1];
@@ -79,48 +113,20 @@ void search(Map map, Planner planner) {
             if (std::find_if(frontier_queue.begin(), frontier_queue.end(),
                              [new_y, new_x](const vector<int> pt) { return pt[1] == new_x && pt[0] == new_y; }) ==
                 frontier_queue.end())
-                frontier_queue.push_back({new_y, new_x, new_cost});
+                frontier_queue.push_back({new_y, new_x, cost + 1});
         }
-
-        // move: get the first element from the list, as a new start
-        if (frontier_queue.size() == 0) {
-            cout << "loop all the grid, but haven't found the goal??" << endl;
-            return;
-        }
-
-
-//        print2DVector(map.grid);  //debug
-        cout << "Expansion #:" << count << endl;
-        cout << "OpenList: ";
-        for (auto &cell : frontier_queue) {
-            cout << "[" << cell[2] << " " <<cell[0] << " " << cell[1]  << "]";
-        }
-        cout << endl;
 
         // set last pos as black
-        map.grid[y][x] = new_cost + 2;
-
-        // move
-        vector<int> new_start = frontier_queue.front();
-        y = new_start[0];
-        x = new_start[1];
-        planner.cost = new_start[2];
-        cout << "Cell Picked: ";
-        cout << "[" <<  new_start[2] << " " << new_start[0] << " " << new_start[1] << " " <<"]" << endl;
-        cout << endl;
+        map.grid[y][x] = cost + 2;
 
         // next
         frontier_queue.pop_front();
-        new_cost = planner.cost + 1;
+//        new_cost = cost + 1;
         count++;
 
-        if (x == planner.goal[1] && y == planner.goal[0]) {
-//            cout << "Arrive the goal!" << endl;
-            break;
-        }
     }
 
-    cout << "Done:" << y << " " << x << " " << new_cost << endl;
+    cout << "Done:" << planner.cost << " " << y << " " << x << " " << endl;
 }
 
 int main() {
