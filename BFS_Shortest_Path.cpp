@@ -62,9 +62,10 @@ void search(Map map, Planner planner) {
     int new_x, new_y;
     int cost = 0;
     int count = 0;
+    int direction_num = sizeof(planner.movements_arrows)/sizeof(planner.movements_arrows[0]);
     deque<vector<int>> frontier_queue;
     vector<vector<int>> footprint(map.mapHeight, vector<int>(map.mapWidth));
-    vector<vector<string> > grid_path(map.mapHeight, vector<string>(map.mapWidth, "-"));
+    vector<vector<string> > grid_paths(map.mapHeight, vector<string>(map.mapWidth, "-"));
 
     string mark;
     int directrion;
@@ -73,7 +74,7 @@ void search(Map map, Planner planner) {
     // init start point
     frontier_queue.push_back({planner.start[0], planner.start[1], cost, 0, planner.start[0], planner.start[1]});
     footprint[planner.start[0]][planner.start[1]] = 1;  //mark this as to avoid duplicate expansion
-    grid_path[planner.start[0]][planner.start[1]] = 1;  //mark this as to avoid duplicate expansion
+    grid_paths[planner.start[0]][planner.start[1]] = 1;  //mark this as to avoid duplicate expansion
 
 
     // replace 1 with -1
@@ -85,7 +86,7 @@ void search(Map map, Planner planner) {
     for (;;) {
         // print
 
-        print2DVector(grid_path);  //debug
+        print2DVector(grid_paths);  //debug
         cout << "Expansion #:" << count << endl;
         cout << "OpenList: ";
         for (auto &cell : frontier_queue) {
@@ -116,14 +117,14 @@ void search(Map map, Planner planner) {
         // reach Goal??
         if (x == planner.goal[1] && y == planner.goal[0]) {
             cout << "Arrive the goal!" << endl;
-            grid_path[parent_y][parent_x] = planner.movements_arrows[directrion];
-            grid_path[y][x] = "*";
+            grid_paths[y][x] = planner.movements_arrows[directrion];
+//            grid_paths[y][x] = "*";
             map.grid[y][x] = cost;
             break;
         }
 
         // mark the last pos
-        grid_path[parent_y][parent_x] = planner.movements_arrows[directrion];
+        grid_paths[y][x] = planner.movements_arrows[directrion];
         map.grid[y][x] = cost;
 
 
@@ -154,14 +155,40 @@ void search(Map map, Planner planner) {
         count++;
     }
 
-    cout << "Done:" << cost << " " << y << " " << x << " " << endl << endl;
+    cout << "Done:" << cost << " " << y << " " << x << " " << parent_y << " " << parent_x << endl << endl;
     print2DVector(map.grid);
     cout << endl;
-    print2DVector(grid_path);
+    print2DVector(grid_paths);  // print all the paths
 
+    //  reverse traverse based on grid_paths to find the shortest_path to the goal
+    vector<vector<string> > shortest_path(map.mapHeight, vector<string>(map.mapWidth, "-"));
+    cout << "============== reverse traverse based ==============" << endl;
 
+    for (;;) {
+        // find parents' direction symbol
+        auto it = find(begin(planner.movements_arrows), end(planner.movements_arrows), grid_paths[y][x]);
+        int index = distance(begin(planner.movements_arrows), it);
+        if (index >= direction_num) {
+            cout << "Error" << endl;
+            return;
+        }
+        parent_y = y - planner.movements[index][0];
+        parent_x = x - planner.movements[index][1];
+        shortest_path[parent_y][parent_x] = planner.movements_arrows[index];
 
+        if (parent_y == planner.start[0] && parent_x == planner.start[1]) {
+            shortest_path[planner.goal[0]][planner.goal[1]] = "*";
+            break;
+        }
 
+        cout << endl;
+        print2DVector(shortest_path);
+
+        y = parent_y;
+        x = parent_x;
+    }
+    cout << "----------- Final shortest_path output -------------" << endl;
+    print2DVector(shortest_path);
 }
 
 int main() {
