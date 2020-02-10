@@ -62,9 +62,13 @@ void search(Map map, Planner planner) {
     int cost = 0;
     int count = 0;
     deque<vector<int>> frontier_queue;
+    vector<vector<int>> footprint(map.mapHeight, vector<int>(map.mapWidth));
 
     // init start point
     frontier_queue.push_back({planner.start[0], planner.start[1], cost});
+    footprint[planner.start[0]][planner.start[1]] = 1;  //mark this as to avoid duplicate expansion
+
+
 
     // replace 1 with -1
     for (auto &v : map.grid)
@@ -103,7 +107,6 @@ void search(Map map, Planner planner) {
         // Goal??
         if (x == planner.goal[1] && y == planner.goal[0]) {
             cout << "Arrive the goal!" << endl;
-            planner.cost = cost;
             map.grid[y][x] = count;
             break;
         }
@@ -123,12 +126,13 @@ void search(Map map, Planner planner) {
 
             // add the available cell to the grid
             if (map.grid[new_y][new_x] == 0) {
-                if (new_y == planner.start[0] && new_x == planner.start[0])
-                    continue;
-                if (std::find_if(frontier_queue.begin(), frontier_queue.end(),
-                                 [new_y, new_x](const vector<int> pt) { return pt[1] == new_x && pt[0] == new_y; }) ==
-                    frontier_queue.end()) {
-                    frontier_queue.push_back({new_y, new_x, cost + 1});
+                // In fact, to avoid push duplicate cell,
+                // I can either search in the frontier queue or maintain another "footprint" queue.
+                // I chose search way, but actually "done" queue should be better(faster)
+                if (footprint[new_y][new_x] == 0) {
+                    // planner.cost mean the cost of each movement
+                    frontier_queue.push_back({new_y, new_x, cost + planner.cost});
+                    footprint[new_y][new_x] = 1;
                 }
             }
         }
@@ -138,7 +142,7 @@ void search(Map map, Planner planner) {
 
     }
 
-    cout << "Done:" << planner.cost << " " << y << " " << x << " " << endl << endl;
+    cout << "Done:" << cost << " " << y << " " << x << " " << endl << endl;
     print2DVector(map.grid);
 }
 
